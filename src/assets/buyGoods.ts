@@ -1,10 +1,10 @@
 import puppeteer from "puppeteer-core";
 import axios from "axios";
-import { queryOrdersByStatus, updateOrderStatus } from "../ddl/orderInfo";
-import { querySkuMapperData } from "../ddl/skuMapper";
-import { OrderStatus } from "../type/orderStatus";
+import { queryOrdersByStatus, updateOrderStatus } from "@/ddl/orderInfo";
+import { querySkuMapperData } from "@/ddl/skuMapper";
+import { OrderStatus } from "@/type/orderStatus";
 
-(async () => {
+async function executeBuyGoods(): Promise<void> {
   console.log("开始执行自动购买任务...");
   
   try {
@@ -13,15 +13,14 @@ import { OrderStatus } from "../type/orderStatus";
     let wsKey = await axios.get('http://127.0.0.1:9222/json/version');
     let browser = await puppeteer.connect({
       browserWSEndpoint: wsKey.data.webSocketDebuggerUrl,
-      defaultViewport: null,
-      args: ['--disable-features=site-per-process'],
+      defaultViewport: null
     });
 
     const page = await browser.newPage();
     page.evaluateOnNewDocument(() => {
-      const newProto = navigator.__proto__;
+      const newProto = (navigator as any).__proto__;
       delete newProto.webdriver;
-      navigator.__proto__ = newProto;
+      (navigator as any).__proto__ = newProto;
     });
 
     // 1. 查询所有状态为unfinish的订单数据
@@ -40,7 +39,7 @@ import { OrderStatus } from "../type/orderStatus";
     // 3. 查询对应的skuMapper数据
     const allSkuMappers = await querySkuMapperData({});
     const skuMapperMap = new Map();
-    allSkuMappers.data.forEach(mapper => {
+    allSkuMappers.forEach((mapper: any) => {
       if (skuMapperIds.includes(mapper.id) && !mapper.disabled) {
         skuMapperMap.set(mapper.id, mapper);
       }
@@ -101,9 +100,13 @@ import { OrderStatus } from "../type/orderStatus";
           // 这里要获取iframe元素
           await delay();
           let pageFrame = await page.$("iframe[class^='addrIframe']");
+          if (!pageFrame) {
+            console.log(`订单 ${orderData.id} 找不到地址iframe，跳过`);
+            continue;
+          }
           const frame = await pageFrame.contentFrame();
           if (!frame) {
-            console.log(`订单 ${orderData.id} 找不到地址iframe，跳过`);
+            console.log(`订单 ${orderData.id} 找不到地址iframe内容，跳过`);
             continue;
           }
 
@@ -193,13 +196,19 @@ import { OrderStatus } from "../type/orderStatus";
   } catch (error) {
     console.error("执行自动购买任务时发生错误:", error);
   }
-})();
+}
 
-
-
-function delay(time) {
-  if(!time){time=Math.random()*4000}
+function delay(time?: number): Promise<void> {
+  if (!time) { time = Math.random() * 4000; }
   return new Promise(function(resolve) { 
-      setTimeout(resolve, time)
+    setTimeout(resolve, time);
   });
+}
+
+// 导出主函数
+export { executeBuyGoods };
+
+// 如果直接运行此文件，则执行自动购买任务
+if (require.main === module) {
+  executeBuyGoods().catch(console.error);
 }

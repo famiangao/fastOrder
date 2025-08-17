@@ -1,0 +1,11 @@
+---
+description: 公共内容
+globs:
+alwaysApply: true
+---
+1. 所有提问内容需记录到 .cursor/log 文件夹，文件名为当天日期，格式为提问概述+具体提问内容。
+
+
+
+
+2. 调用sql语句要在dal文件夹下调用，dal文件夹下的内容要在ddl文件夹下调用，views只能调用ddl文件夹下内容，不能直接调用sql

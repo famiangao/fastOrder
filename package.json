@@ -20,6 +20,11 @@
     "test": "vitest run",
     "fix": "electron-fix start"
   },
+  "config": {
+    "electron": {
+      "mirror": "https://registry.npmmirror.com/-/binary/electron/"
+    }
+  },
   "dependencies": {
     "antd": "^5.24.6",
     "axios": "^1.8.4",
@@ -27,8 +32,10 @@
     "fs-extra": "^11.3.0",
     "node-xlsx": "^0.24.0",
     "puppeteer-core": "^24.6.0",
+    "react-router-dom": "^7.7.0",
     "sqlite3": "^5.1.7",
-    "universalify": "^2.0.1"
+    "universalify": "^2.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2",

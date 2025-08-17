@@ -1,10 +1,16 @@
 import { useState } from 'react'
 import './App.css'
-import { Button } from 'antd';
+import { Button, Space, Typography, Card } from 'antd';
 import path from 'node:path'
 import { ipcRenderer } from 'electron';
+import { BrowserRouter, HashRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import OrderInfo from '@/views/orderInfo';
+import SkuMapper from '@/views/skuMapper';
+import LogViewer from '@/components/LogViewer';
 
-function App() {
+const { Title } = Typography;
+
+function Home() {
   const [count, setCount] = useState(0)
   const processCwd=process.cwd();
   const pidMapExcel=path.join(processCwd,"./src/assets/pidMap.xlsx")
@@ -14,13 +20,49 @@ function App() {
     // await buyGoodsUseExcel();
     await ipcRenderer.invoke('toBuyGoods');
   }
+  const navigate = useNavigate();
   return (
     <div className='App'>
-      对照Excel：{pidMapExcel}
-      商品Excel:{importExcel}
-      <Button onClick={handleRun}>执行</Button>
+      <Title level={2} style={{ margin: '20px 0', textAlign: 'center' }}>快速订单系统</Title>
+      
+      <Card style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          {/* <div>
+            <p>对照Excel：{pidMapExcel}</p>
+            <p>商品Excel: {importExcel}</p>
+          </div>
+           */}
+          <Space size="middle" wrap style={{ justifyContent: 'center', width: '100%' }}>
+            <Button onClick={handleRun} type="default">执行旧版</Button>
+            <Button onClick={()=>navigate('/orderInfo')} type="primary">订单信息</Button>
+            <Button onClick={()=>navigate('/skuMapper')} type="primary">SKU映射</Button>
+            <Button onClick={()=>navigate('/logs')} type="primary">查看日志</Button>
+            {/* <Button 
+              onClick={()=>navigate('/buyGoods')} 
+              type="primary" 
+              style={{ background: '#52c41a', borderColor: '#52c41a' }}
+            >
+              自动下单系统
+            </Button> */}
+          </Space>
+        </Space>
+      </Card>
     </div>
   )
+}
+
+function App() {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/orderInfo" element={<OrderInfo />} />
+        <Route path="/skuMapper" element={<SkuMapper />} />
+        <Route path="/logs" element={<LogViewer />} />
+        {/* <Route path="/buyGoods" element={<BuyGoodsUseExcel />} /> */}
+      </Routes>
+    </HashRouter>
+  );
 }
 
 export default App

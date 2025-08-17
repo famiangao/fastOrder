@@ -2,12 +2,16 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "YourAppID",
   "asar": true,
+  "npmRebuild": false,
   "directories": {
-    "output": "release/${version}"
+    "output": "release/${version}_${buildVersion}"
   },
   "files": [
     "dist-electron",
     "dist"
+  ],
+  "extraResources": [
+    "static/**/*"
   ],
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",

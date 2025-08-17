@@ -2,9 +2,10 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import fs from 'node:fs'
 import os from 'node:os'
 import { update } from './update'
-import { buyGoodsUseExcel } from "../puppeteer/buyGoodsUseExcel"
+import { buyGoodsUseExcel } from '../puppeteer/buyGoodsUseExcel'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -65,6 +66,8 @@ async function createWindow() {
     win.webContents.openDevTools()
   } else {
     win.loadFile(indexHtml)
+    // 在打包环境中也打开开发者工具，方便调试
+    // win.webContents.openDevTools()
   }
 
   // Test actively push message to the Electron-Renderer
@@ -122,7 +125,6 @@ ipcMain.handle('open-win', (_, arg) => {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
 })
-
 ipcMain.handle("toBuyGoods",()=>{
   try{
     buyGoodsUseExcel();
@@ -131,3 +133,50 @@ ipcMain.handle("toBuyGoods",()=>{
     
   }
 })
+
+// 添加日志相关的 IPC 处理器
+ipcMain.handle('get-log-path', () => {
+  const userDataPath = app.getPath('userData');
+  return path.join(userDataPath, 'buyGoods-log.txt');
+});
+
+ipcMain.handle('read-log-file', async () => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const logFilePath = path.join(userDataPath, 'buyGoods-log.txt');
+    
+    if (fs.existsSync(logFilePath)) {
+      return fs.readFileSync(logFilePath, 'utf8');
+    } else {
+      return '日志文件不存在';
+    }
+  } catch (error) {
+    return `读取日志失败: ${error}`;
+  }
+});
+
+ipcMain.handle('clear-log-file', async () => {
+  try {
+    const userDataPath = app.getPath('userData');
+    const logFilePath = path.join(userDataPath, 'buyGoods-log.txt');
+    
+    if (fs.existsSync(logFilePath)) {
+      fs.writeFileSync(logFilePath, '', 'utf8');
+      return '日志清空成功';
+    } else {
+      return '日志文件不存在';
+    }
+  } catch (error) {
+    return `清空日志失败: ${error}`;
+  }
+});
+
+ipcMain.handle('open-log-folder', async () => {
+  try {
+    const userDataPath = app.getPath('userData');
+    shell.openPath(userDataPath);
+    return '文件夹打开成功';
+  } catch (error) {
+    return `打开文件夹失败: ${error}`;
+  }
+});

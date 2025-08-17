@@ -1,39 +1,45 @@
+import path from 'path';
+import { getDatabasePath } from './pathHelper';
 const sqlite3 = require('sqlite3').verbose();
-
-import path from 'path'
 
 export class sqliteTool {
   db: any;
   status: boolean = false;
-  url = path.join(process.cwd(), '/static/db/zmj.db');
+  
+  url = getDatabasePath();
+
   // 连接数据库
   open() {
-    return new Promise<any>(async (resolve, reject) => {
-      var _this = this;
-      this.db = new sqlite3.Database(this.url, function (err: any, row: any) {
-        if (err) throw err;
-        resolve(_this.db);
+    console.log(this.url);
+    
+    return new Promise<any>((resolve, reject) => {
+      this.db = new sqlite3.Database(this.url, (err: any) => {
+        if (err) reject(err);
+        else resolve(this.db);
       });
     });
   }
-  async run(query: string) {
-    return new Promise<void>((resolve, reject) => {
-      this.db.run('begin transaction');
-      try {
-        this.db.run(query, function (err: any, row: any) {
-          if (err) reject(err.message);
-          else {
-            resolve(row);
-          }
-        });
-        this.db.run('commit');
-      } catch {
-        this.db.run('rollback');
-      }
+
+  // 支持带参数的run
+  async run(query: string, params: any[] = []) {
+    return new Promise<any>((resolve, reject) => {
+      const db = this.db;
+      db.run('BEGIN TRANSACTION');
+      db.run(query, params, function (err: any) {
+        if (err) {
+          db.run('ROLLBACK');
+          reject(err.message);
+        } else {
+          db.run('COMMIT');
+          resolve(undefined);
+        }
+      });
     });
   }
-  async get(query: any, params: any) {
-    return new Promise<void>((resolve, reject) => {
+
+  // 支持带参数的get
+  async get(query: string, params: any[] = []) {
+    return new Promise<any>((resolve, reject) => {
       this.db.get(query, params, function (err: any, row: any) {
         if (err) reject('Read error:' + err.message);
         else resolve(row);
@@ -41,49 +47,35 @@ export class sqliteTool {
     });
   }
 
-  async all(query: any, params: any = '') {
-    if (params) {
-      return new Promise<void>((resolve, reject) => {
-        this.db.all(query, params, function (err: any, row: any) {
-          if (err) reject('Read error1:' + err.message);
-          else resolve(row);
-        });
+  // 支持带参数的all
+  async all(query: string, params: any[] = []) {
+    return new Promise<any[]>((resolve, reject) => {
+      this.db.all(query, params, function (err: any, rows: any[]) {
+        if (err) reject('Read error:' + err.message);
+        else resolve(rows);
       });
-    } else {
-      const a = new Promise<void>((resolve, reject) => {
-        this.db.all(query, function (err: any, row: any) {
-          if (err) reject('Read error2:' + err.message + query);
-          else resolve(row);
-        });
-      });
-      return a;
-    }
+    });
   }
 
-  async each(query: any, params: any) {
-    return new Promise<void>((resolve, reject) => {
-      var _this = this;
-      this.db.serialize(function () {
-        _this.db.each(query, params, function (err: any, row: any) {
-          if (err) reject('Read error: ' + err.message);
-          else {
-            resolve(row);
-          }
-        });
-        _this.db.get('', function (err: any, row: any) {
-          resolve(row);
-        });
+  // each方法可选
+  async each(query: string, params: any[] = []) {
+    return new Promise<any[]>((resolve, reject) => {
+      const results: any[] = [];
+      this.db.each(query, params, function (err: any, row: any) {
+        if (err) reject('Read error: ' + err.message);
+        else results.push(row);
+      }, function (err: any, count: number) {
+        if (err) reject('Read error: ' + err.message);
+        else resolve(results);
       });
     });
   }
 
   async close() {
     return new Promise<boolean>((resolve, reject) => {
-      this.db.close(function (err: any, row: any) {
+      this.db.close(function (err: any) {
         if (err) reject('Read error: ' + err.message);
-        else {
-          resolve(true);
-        }
+        else resolve(true);
       });
     });
   }
