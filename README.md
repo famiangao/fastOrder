@@ -20,12 +20,10 @@
 > **请务必核对订单信息**：系统自动匹配可能存在误差，请在付款前仔细核对商品信息、规格、价格等，确认无误后再进行付款操作。
 
 ## 🖼️ 应用展示
-
-### 应用演示
-![应用演示](./electron-vite-react.gif)
-
-### 调试界面  
-![调试界面](./electron-vite-react-debug.gif)
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
 
 ## 🚀 快速开始
 
