@@ -86,7 +86,3 @@ pnpm run build
 ---
 
 ⭐ **AI编程 × 电商自动化** - 觉得有用的话，给个星星鼓励一下吧！ 
-
-## 📄 开源协议
-
-MIT License - 详见 [LICENSE](LICENSE) 文件，简单说就是随便用，但别怪我 😄
