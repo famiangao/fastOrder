@@ -7,6 +7,7 @@ import { BrowserRouter, HashRouter, Routes, Route, useNavigate } from 'react-rou
 import OrderInfo from '@/views/orderInfo';
 import SkuMapper from '@/views/skuMapper';
 import LogViewer from '@/components/LogViewer';
+import Settings from '@/views/Settings';
 
 const { Title } = Typography;
 
@@ -20,6 +21,18 @@ function Home() {
     // await buyGoodsUseExcel();
     await ipcRenderer.invoke('toBuyGoods');
   }
+  
+  const handleTaobaoLogin = async () => {
+    try {
+      const result = await ipcRenderer.invoke('open-taobao-login');
+      if (!result.success) {
+        console.error('打开淘宝登录页失败:', result.error);
+      }
+    } catch (error) {
+      console.error('打开淘宝登录页失败:', error);
+    }
+  }
+  
   const navigate = useNavigate();
   return (
     <div className='App'>
@@ -27,12 +40,19 @@ function Home() {
       
       <Card style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* <div>
-            <p>对照Excel：{pidMapExcel}</p>
-            <p>商品Excel: {importExcel}</p>
-          </div>
-           */}
           <Space size="middle" wrap style={{ justifyContent: 'center', width: '100%' }}>
+            <Button 
+              onClick={handleTaobaoLogin}
+              type="primary"
+              size="large"
+              style={{
+                background: '#ff6600',
+                borderColor: '#ff6600',
+                fontWeight: 'bold'
+              }}
+            >
+              淘宝登录
+            </Button>
             <Button 
               onClick={handleRun} 
               type="primary" 
@@ -48,6 +68,7 @@ function Home() {
             <Button onClick={()=>navigate('/orderInfo')} type="default">订单信息</Button>
             <Button onClick={()=>navigate('/skuMapper')} type="default">SKU映射</Button>
             <Button onClick={()=>navigate('/logs')} type="default">查看日志</Button>
+            <Button onClick={()=>navigate('/settings')} type="default">设置</Button>
             {/* <Button 
               onClick={()=>navigate('/buyGoods')} 
               type="primary" 
@@ -70,6 +91,7 @@ function App() {
         <Route path="/orderInfo" element={<OrderInfo />} />
         <Route path="/skuMapper" element={<SkuMapper />} />
         <Route path="/logs" element={<LogViewer />} />
+        <Route path="/settings" element={<Settings />} />
         {/* <Route path="/buyGoods" element={<BuyGoodsUseExcel />} /> */}
       </Routes>
     </HashRouter>

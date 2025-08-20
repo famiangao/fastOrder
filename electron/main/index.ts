@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 import os from 'node:os'
+import { exec } from 'child_process'
 import { update } from './update'
 import { buyGoodsUseExcel } from '../puppeteer/buyGoodsUseExcel'
 
@@ -178,5 +179,86 @@ ipcMain.handle('open-log-folder', async () => {
     return '文件夹打开成功';
   } catch (error) {
     return `打开文件夹失败: ${error}`;
+  }
+});
+
+// 打开淘宝登录页面
+ipcMain.handle('open-taobao-login', async () => {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'chrome-config.json');
+    let chromeConfig = {
+      userDataDir: 'D:\\SOFTWARE\\chrome\\ChromeDebug',
+      debugPort: '9222'
+    };
+    
+    if (fs.existsSync(configPath)) {
+      try {
+        chromeConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      } catch (error) {
+        console.error('读取Chrome配置失败，使用默认配置:', error);
+      }
+    }
+    
+    // 先尝试关闭已有的Chrome进程
+    await new Promise<void>((resolve) => {
+      exec('taskkill /F /IM "chrome.exe"', (error: any) => {
+        // 无论是否成功都继续执行
+        resolve();
+      });
+    });
+    
+    // 等待一下确保进程已关闭
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // 打开Chrome并跳转到淘宝登录页
+    const chromeCommand = `start chrome --remote-debugging-port=${chromeConfig.debugPort} --user-data-dir="${chromeConfig.userDataDir}" "https://login.taobao.com/havanaone/login/login.htm"`;
+    
+    return new Promise((resolve, reject) => {
+      exec(chromeCommand, (error: any, stdout: any, stderr: any) => {
+        if (error) {
+          console.error('打开淘宝登录页失败:', error);
+          reject({ success: false, error: error.message });
+        } else {
+          console.log('淘宝登录页已打开');
+          resolve({ success: true });
+        }
+      });
+    });
+  } catch (error: any) {
+    console.error('打开淘宝登录页失败:', error);
+    return { success: false, error: error?.message || '未知错误' };
+  }
+});
+
+// Chrome配置相关的IPC处理器
+ipcMain.handle('get-chrome-config', async () => {
+  try {
+    // 从文件读取配置，如果不存在则返回默认值
+    const configPath = path.join(app.getPath('userData'), 'chrome-config.json');
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      return config;
+    }
+    return {
+      userDataDir: 'D:\\SOFTWARE\\chrome\\ChromeDebug',
+      debugPort: '9222'
+    };
+  } catch (error) {
+    console.error('获取Chrome配置失败:', error);
+    return {
+      userDataDir: 'D:\\SOFTWARE\\chrome\\ChromeDebug',
+      debugPort: '9222'
+    };
+  }
+});
+
+ipcMain.handle('set-chrome-config', async (_, config) => {
+  try {
+    const configPath = path.join(app.getPath('userData'), 'chrome-config.json');
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    return { success: true };
+  } catch (error: any) {
+    console.error('保存Chrome配置失败:', error);
+    return { success: false, error: error?.message || '未知错误' };
   }
 });

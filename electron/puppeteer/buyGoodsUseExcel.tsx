@@ -131,6 +131,24 @@ async function openChrome(){
         fs.appendFileSync(logFilePath, logEntry, 'utf8');
       };
       
+      // 读取Chrome配置
+      const configPath = path.join(app.getPath('userData'), 'chrome-config.json');
+      let chromeConfig = {
+        userDataDir: 'D:\\SOFTWARE\\chrome\\ChromeDebug',
+        debugPort: '9222'
+      };
+      
+      if (fs.existsSync(configPath)) {
+        try {
+          chromeConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+          writeLog(`使用自定义Chrome配置: ${JSON.stringify(chromeConfig)}`);
+        } catch (error) {
+          writeLog(`读取Chrome配置失败，使用默认配置: ${error}`);
+        }
+      } else {
+        writeLog('Chrome配置文件不存在，使用默认配置');
+      }
+      
       //清理之前的谷歌进程
       await new Promise((res, rej) => {
         childProcess.exec('taskkill /F /IM "chrome.exe"', (error, stdout, stderr) => {
@@ -146,9 +164,10 @@ async function openChrome(){
       });
 
       //创建新谷歌进程
-      //"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="D:\SOFTWARE\chrome\ChromeDebug --user-data-dir="D:\SOFTWARE\chrome\ChromeDebug"
       await new Promise((res, rej) => {
-        childProcess.exec('start chrome --remote-debugging-port=9222 --user-data-dir="D:\\SOFTWARE\\chrome\\ChromeDebug"', (error, stdout, stderr) => {
+        const chromeCommand = `start chrome --remote-debugging-port=${chromeConfig.debugPort} --user-data-dir="${chromeConfig.userDataDir}"`;
+        writeLog(`执行Chrome启动命令: ${chromeCommand}`);
+        childProcess.exec(chromeCommand, (error, stdout, stderr) => {
           if (!error) {
             writeLog("Chrome 浏览器启动成功");
             res("");
