@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Form, Input, message, Popconfirm, Select, Tag, Typography, Card } from "antd";
-import { queryOrderInfoData, addOrderInfoData, updateOrderInfoData, deleteOrderInfoData, updateOrderStatus } from "@/ddl/orderInfo";
+import { queryOrderInfoData, addOrderInfoData, updateOrderInfoData, deleteOrderInfoData, updateOrderStatus, fillMissingSkuMapper } from "@/ddl/orderInfo";
 import { querySkuMapperData } from "@/ddl/skuMapper";
 import BackButton from "@/components/BackButton";
 import ImportExcel from "@/components/ImportExcel";
@@ -106,6 +106,8 @@ const OrderInfo: React.FC = () => {
 
     setLoading(true);
     try {
+      // 如果 newData 中缺少 skuMapperId，交由 ddl 层填充已有映射
+      await fillMissingSkuMapper(newData);
       // 批量添加新数据
       for (const item of newData) {
         await addOrderInfoData(item);
