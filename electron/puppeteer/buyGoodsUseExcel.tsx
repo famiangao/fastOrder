@@ -2,6 +2,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import childProcess from "child_process"
 import { app } from 'electron'
+import { executeBuyGoodsNodeJS } from './buyGoodsNodeJS'
 
 async function buyGoodsUseExcel(){
   try {
@@ -25,82 +26,14 @@ async function buyGoodsUseExcel(){
     //先打开对应浏览器
     await openChrome();
     
-    writeLog("浏览器启动完成，等待2秒后执行脚本...");
+    writeLog("浏览器启动完成，等待2秒后执行购买函数...");
     
     // 等待浏览器完全启动
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // 使用子进程执行Node.js脚本，避免模块系统冲突
-    await new Promise((resolve, reject) => {
-      // 智能路径检测
-      let scriptPath: string;
-      
-      if (app.isPackaged) {
-        // 打包环境：脚本在 extraResources 中
-        const resourcesPath = process.resourcesPath;
-        scriptPath = path.join(resourcesPath, 'static', 'buyGoodsNodeJS.cjs');
-        writeLog(`打包环境 - resources路径: ${resourcesPath}`);
-        writeLog(`打包环境 - 脚本路径: ${scriptPath}`);
-      } else {
-        // 开发环境：脚本在项目 static 目录中
-        const appPath = app.getAppPath();
-        scriptPath = path.join(appPath, 'static', 'buyGoodsNodeJS.cjs');
-        writeLog(`开发环境 - app路径: ${appPath}`);
-        writeLog(`开发环境 - 脚本路径: ${scriptPath}`);
-      }
-      
-      // 检查文件是否存在
-      if (!fs.existsSync(scriptPath)) {
-        writeLog(`脚本文件不存在: ${scriptPath}`);
-        reject(new Error(`脚本文件不存在: ${scriptPath}`));
-        return;
-      }
-      
-      writeLog(`开始执行脚本: ${scriptPath}`);
-      
-      // 使用 spawn 而不是 exec，以便实时获取输出
-      const spawn = childProcess.spawn('node', [scriptPath], {
-        stdio: ['pipe', 'pipe', 'pipe']
-      });
-      
-      // 实时输出 stdout
-      spawn.stdout.on('data', (data: Buffer) => {
-        const output = data.toString('utf8');
-        writeLog(`[子进程输出]: ${output.trim()}`);
-      });
-      
-      // 实时输出 stderr
-      spawn.stderr.on('data', (data: Buffer) => {
-        const output = data.toString('utf8');
-        writeLog(`[子进程错误]: ${output.trim()}`);
-      });
-      
-      // 监听进程退出
-      spawn.on('close', (code: number | null) => {
-        writeLog(`子进程退出，退出码: ${code}`);
-        if (code === 0) {
-          writeLog("自动购买任务执行完成");
-          resolve("");
-        } else {
-          reject(new Error(`子进程退出异常，退出码: ${code}`));
-        }
-      });
-      
-      // 监听进程错误
-      spawn.on('error', (error: Error) => {
-        writeLog(`子进程启动失败: ${error.message}`);
-        reject(error);
-      });
-      
-      // 添加超时处理（5分钟）
-      setTimeout(() => {
-        if (!spawn.killed) {
-          writeLog('子进程执行超时，正在终止...');
-          spawn.kill();
-          reject(new Error('执行超时'));
-        }
-      }, 5 * 60 * 1000);
-    });
+    // 直接调用函数而不是通过子进程
+    writeLog("开始执行购买函数...");
+    await executeBuyGoodsNodeJS(writeLog);
     
     writeLog("自动购买任务全部完成");
     writeLog(`日志文件位置: ${logFilePath}`);

@@ -10,7 +10,7 @@ export class sqliteTool {
 
   // 连接数据库
   open() {
-    console.log(this.url);
+    console.log('尝试打开数据库:', this.url);
     
     return new Promise<any>((resolve, reject) => {
       this.db = new sqlite3.Database(this.url, (err: any) => {

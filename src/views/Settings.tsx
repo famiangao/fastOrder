@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Button, message, Card, Space, Divider } from 'antd';
-import { FolderOpenOutlined, SaveOutlined, ReloadOutlined } from '@ant-design/icons';
+import { FolderOpenOutlined, SaveOutlined, ReloadOutlined, LeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -12,6 +13,7 @@ interface ChromeConfig {
 const Settings: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // 加载配置
   const loadConfig = async () => {
@@ -73,7 +75,15 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: '20px', position: 'relative' }}>
+      <Button
+        type="default"
+        icon={<LeftOutlined />}
+        style={{ position: 'absolute', left: 20, top: 30, zIndex: 10 }}
+        onClick={() => navigate(-1)}
+      >
+        返回
+      </Button>
       <Card title="Chrome 浏览器配置" style={{ maxWidth: 800, margin: '0 auto' }}>
         <Form
           form={form}
@@ -152,7 +162,6 @@ const Settings: React.FC = () => {
           <ol>
             <li>用户数据目录：Chrome浏览器的用户配置文件存储位置，建议使用独立的目录</li>
             <li>调试端口：用于Puppeteer连接Chrome的端口，确保端口未被占用</li>
-            <li>修改配置后需要重新启动购买任务才能生效</li>
             <li>如果路径包含空格，系统会自动处理</li>
           </ol>
         </Card>

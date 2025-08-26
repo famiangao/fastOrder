@@ -40,6 +40,12 @@ pnpm run dev
 # 打包应用
 pnpm run build
 ```
+## 前置准备
+1. 电脑上必须安装chrome浏览器
+2. 在使用前必须创建一个空的文件夹，并把这个文件夹的路径放到设置页面的 Chrome 用户数据目录内
+![alt text](image-4.png)
+
+
 
 ## 🎮 使用流程
 
